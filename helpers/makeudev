@@ -47,12 +47,17 @@ while (<>) {
   # However udev builtins only operate on /dev nodes (AFAICT)
   # Matching is done on events without the /sys/ (which is a userspace
   # convention) but chmod/chown needs the /sys
-  # FIXME: consider replacing chmod/chown with an all-in-one to avoid extra exec()s
   if (m{^/sys/}) {
     print "# sys rule\n";
     s{^/sys/}{};
     my ($dev, $key, $mode, $owner, $group) = split;
-    print qq{DEVPATH=="/$dev", TEST=="/sys/\$devpath/$key", RUN+="/bin/chmod $mode /sys/\$devpath/$key", RUN+="/bin/chown $owner:$group /sys/\$devpath/$key"\n} ;
+    # backslash reference
+    #   perl wants to see:  chmod $mode, "/sys/\$devpath/$key"; chown $owner,$group "/sys/\$devpath/$key"
+    #   shell wants to see: perl -e "chmod $mode, \"/sys/\$devpath/$key\"; chown $owner,$group \"/sys/\$devpath/$key\""
+    #   udev wants to see:  RUN+="perl -e \\"chmod $mode, \\\\"/sys/\$devpath/$key\\\\"; chown $owner,$group \\\\"/sys/\$devpath/$key\\\\"\\""
+    #   perl wants to see:  print qq{ ... "perl -e \\\"chmod $mode, \\\\\"/sys/\$devpath/$key\\\\\"; chown $owner,$group \\\\\"/sys/\$devpath/$key\\\\\"\\\""};
+    # ... and we still have to take care about escaping $ ;)
+    print qq{DEVPATH=="/$dev", TEST=="/sys/\$devpath/$key", RUN+="perl -e \\\"chmod $mode, \\\\"/sys/\$devpath/$key\\\\\"; chown $owner,$group \\\\\"/sys/\$devpath/$key\\\\\"\\\""\n};
     next;
   }
 
