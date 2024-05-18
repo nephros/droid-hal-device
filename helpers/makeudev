@@ -52,12 +52,10 @@ while (<>) {
     s{^/sys/}{};
     my ($dev, $key, $mode, $owner, $group) = split;
     # backslash reference
-    #   perl wants to see:  chmod $mode, "/sys/\$devpath/$key"; chown $owner,$group "/sys/\$devpath/$key"
-    #   shell wants to see: perl -e "chmod $mode, \"/sys/\$devpath/$key\"; chown $owner,$group \"/sys/\$devpath/$key\""
-    #   udev wants to see:  RUN+="perl -e \\"chmod $mode, \\\\"/sys/\$devpath/$key\\\\"; chown $owner,$group \\\\"/sys/\$devpath/$key\\\\"\\""
-    #   perl wants to see:  print qq{ ... "perl -e \\\"chmod $mode, \\\\\"/sys/\$devpath/$key\\\\\"; chown $owner,$group \\\\\"/sys/\$devpath/$key\\\\\"\\\""};
-    # ... and we still have to take care about escaping $ ;)
-    print qq{DEVPATH=="/$dev", TEST=="/sys/\$devpath/$key", RUN+="perl -e \\\"chmod $mode, \\\\"/sys/\$devpath/$key\\\\\"; chown $owner,$group \\\\\"/sys/\$devpath/$key\\\\\"\\\""\n};
+    #   shell invocation:   /bin/sh -c 'chmod $3 "/sys/\$devpath/$2"; chown $4:$5 "/sys/\$devpath/$2"' udev_sh $dev $key $mode $owner $group
+    #   udev wants to see:  RUN+="/bin/sh -c 'chmod $3 \"/sys/\$devpath/$2\"; chown $4:$5 \"/sys/\$devpath/$2\"' udev_sh $dev $key $mode $owner $group"
+    #   perl wants to see:  print qq{ … "/bin/sh -c 'chmod $3 \\\"/sys/\$devpath/$2\\\"; chown $4:$5 \\\"/sys/\$devpath/$2\\\"' udev_sh $dev $key $mode $owner $group" … };
+    print qq{DEVPATH=="/$dev", TEST=="/sys/\$devpath/$key", RUN+="/bin/sh -c 'chmod $3 \\\"/sys/\$devpath/$2\\\"; chown $4:$5 \\\"/sys/\$devpath/$2\\\"' udev_sh $dev $key $mode $owner $group"\n};
     next;
   }
 
