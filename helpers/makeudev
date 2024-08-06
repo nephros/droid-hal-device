@@ -57,7 +57,7 @@ while (<>) {
     #   udev wants to see:  RUN+="perl -e \\"chmod $mode, \\\\"/sys/\$devpath/$key\\\\"; chown $owner,$group \\\\"/sys/\$devpath/$key\\\\"\\""
     #   perl wants to see:  print qq{ ... "perl -e \\\"chmod $mode, \\\\\"/sys/\$devpath/$key\\\\\"; chown $owner,$group \\\\\"/sys/\$devpath/$key\\\\\"\\\""};
     # ... and we still have to take care about escaping $ ;)
-    print qq{DEVPATH=="/$dev", TEST=="/sys/\$devpath/$key", RUN+="perl -e \\\"chmod $mode, \\\\"/sys/\$devpath/$key\\\\\"; chown $owner,$group \\\\\"/sys/\$devpath/$key\\\\\"\\\""\n};
+    print qq{DEVPATH=="/$dev", TEST=="/sys/\$devpath/$key", RUN+="/usr/bin/perl -f -X -e \\\"chmod $mode, \\\\"/sys/\$devpath/$key\\\\\"; chown $owner,$group \\\\\"/sys/\$devpath/$key\\\\\"\\\""\n};
     next;
   }
 
